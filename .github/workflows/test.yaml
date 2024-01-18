@@ -1,6 +1,6 @@
 name: Set of tests for Self-Hosted RISC-V runner
 
-on: [workflow_dispatch, pull_request]
+on: [workflow_dispatch]
 
 jobs:
   run:
