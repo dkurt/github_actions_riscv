@@ -13,11 +13,25 @@ jobs:
 
     - name: Download .NET
       run: |
-        wget https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/dotnet-sdk-8.0.101-linux-riscv64.tar.gz
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/dotnet-sdk-8.0.101-linux-riscv64.tar.gz
+        mkdir ${{ github.workspace }}/packages
+        cd ${{ github.workspace }}/packages
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.AspNetCore.App.Runtime.linux-riscv64.8.0.1-servicing.23580.8.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.AspNetCore.App.Runtime.linux-riscv64.8.0.1-servicing.23580.8.symbols.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.AspNetCore.App.Runtime.linux-riscv64.8.0.1.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.AspNetCore.App.Runtime.linux-riscv64.8.0.1.symbols.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.NETCore.App.Host.linux-riscv64.8.0.1.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.NETCore.App.Host.linux-riscv64.8.0.1.symbols.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.NETCore.App.Runtime.linux-riscv64.8.0.1-servicing.23580.1.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.NETCore.App.Runtime.linux-riscv64.8.0.1-servicing.23580.1.symbols.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.NETCore.App.Runtime.linux-riscv64.8.0.1.nupkg
+        wget -q https://github.com/dkurt/dotnet_riscv/releases/download/v8.0.101/Microsoft.NETCore.App.Runtime.linux-riscv64.8.0.1.symbols.nupkg
 
     - name: Prepare
       run: |
         cd runner
+        sed -i "s|/home/ubuntu/packages|${{ github.workspace }}|" src/NuGet.Config
+        
         mkdir -p _dotnetsdk/8.0.101
         cd _dotnetsdk/8.0.101
         tar -xf ${{ github.workspace }}/dotnet-sdk-8.0.101-linux-riscv64.tar.gz
@@ -26,4 +40,8 @@ jobs:
       run: |
         cd runner/src
         ./dev.sh layout Release linux-riscv64
-        
+
+    - name: Package
+      run: |
+        cd runner/src
+        ./dev.sh package Release linux-riscv64
