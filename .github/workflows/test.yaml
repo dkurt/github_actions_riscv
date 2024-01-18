@@ -11,3 +11,6 @@ jobs:
       run: |
         uname -m
         cat /proc/cpuinfo
+
+    - name: OS info
+      run: cat /etc/os-release
