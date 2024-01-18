@@ -4,11 +4,6 @@ This repository provides a guide on how to build and use GitHub Actions (GitHub 
 
 **Disclaimer**: this project is not related to GitHub or .NET development. Any instructions or binary packages published in the spirit of the open source. Use carefully.
 
-## Observed issues
-
-* The workspace is not cleaned
-* `actions/upload-artifact` not working because of disabled Node.js (actually, ARM64 binaries were downloaded)
-
 ## How to use
 
 Use a [pre-compiled](https://github.com/dkurt/github_actions_riscv/releases) version or follow the build steps from [build.yaml](.github/workflows/build.yaml).
