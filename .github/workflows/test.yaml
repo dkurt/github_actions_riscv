@@ -1,6 +1,6 @@
 name: Set of tests for Self-Hosted RISC-V runner
 
-on: [workflow_dispatch]
+on: [workflow_dispatch, pull_request]
 
 jobs:
   run:
@@ -14,3 +14,12 @@ jobs:
 
     - name: OS info
       run: cat /etc/os-release
+
+    - name: Crete a text file
+      run: echo 123 > file.txt
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: file
+        path: file.txt
