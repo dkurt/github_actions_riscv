@@ -18,7 +18,10 @@ jobs:
     - name: Crete a text file
       run: echo 123 > file.txt
 
-    - name: Upload
+    - name: Test actions/checkout
+      uses: actions/checkout@v4
+
+    - name: Test actions/upload-artifact
       uses: actions/upload-artifact@v4
       with:
         name: file
