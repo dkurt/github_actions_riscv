@@ -3,7 +3,7 @@ name: Build RISC-V runner
 on: [workflow_dispatch, pull_request]
 
 jobs:
-  run:
+  build:
     runs-on: self-hosted
 
     steps:
@@ -46,9 +46,3 @@ jobs:
       run: |
         cd runner/src
         ./dev.sh package Release linux-riscv64
-
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: actions-runner-linux-riscv64
-        path: runner/_package/actions-runner-linux-riscv64-2.311.0.tar.gz
