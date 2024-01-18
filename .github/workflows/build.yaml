@@ -10,7 +10,7 @@ jobs:
     - name: Clone repositories
       run: |
         rm -rf runner
-        git clone -b dkurt/riscv64_runner https://github.com/dkurt/runner --depth 1
+        git clone -b dkurt/riscv64_runner_2.312.0 https://github.com/dkurt/runner --depth 1
 
     - name: Download .NET
       run: |
@@ -46,3 +46,9 @@ jobs:
       run: |
         cd runner/src
         ./dev.sh package Release linux-riscv64
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: actions-runner-linux-riscv64
+        path: "runner/_package/actions-runner-linux-riscv64-*.tar.gz"
