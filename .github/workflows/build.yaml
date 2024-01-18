@@ -9,6 +9,7 @@ jobs:
     steps:
     - name: Clone repositories
       run: |
+        rm -rf runner
         git clone -b dkurt/riscv64_runner https://github.com/dkurt/runner --depth 1
 
     - name: Download .NET
@@ -31,7 +32,7 @@ jobs:
       run: |
         cd runner
         sed -i "s|/home/ubuntu/packages|${{ github.workspace }}|" src/NuGet.Config
-        
+
         mkdir -p _dotnetsdk/8.0.101
         cd _dotnetsdk/8.0.101
         tar -xf ${{ github.workspace }}/dotnet-sdk-8.0.101-linux-riscv64.tar.gz
@@ -45,3 +46,9 @@ jobs:
       run: |
         cd runner/src
         ./dev.sh package Release linux-riscv64
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: actions-runner-linux-riscv64
+        path: runner/_package/actions-runner-linux-riscv64-2.311.0.tar.gz
