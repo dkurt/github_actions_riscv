@@ -26,4 +26,10 @@ Verify .NET installation:
 
 Then do `./config.sh` and `./run.sh` as recommended in your repository `Settings->Actions->Runners->New self-hosted runner` tab.
 
-Runner was tested on Sipeed Lichee RV Dock with [Ubuntu 23.10](https://ubuntu.com/download/risc-v).
+Runner was tested on:
+
+| Board | OS | Comment |
+|-------|----|---------|
+| MangoPi MQ-Pro | [Ubuntu 23.10](https://ubuntu.com/download/risc-v) | |
+| Sipeed Lichee RV Dock | [Ubuntu 23.10](https://ubuntu.com/download/risc-v) | |
+| Sipeed Lichee RV Dock | [20211230_LicheeRV_debian_d1_hdmi_8723ds.7z](./howto_setup_rvv.md) | Use [GCC version](https://github.com/dkurt/dotnet_riscv/releases) ot .NET because of `fence.tso` hardware bug  |
