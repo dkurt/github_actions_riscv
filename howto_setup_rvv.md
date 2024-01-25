@@ -100,5 +100,5 @@ There is one known vendor OS which goes with RVV 0.7.1 ISA out of the box. Downl
 
     ```
     sudo apt-get update
-    sudo apt-get install -y libc6 libstd++6
+    sudo apt-get install -y libc6 libstdc++6
     ```

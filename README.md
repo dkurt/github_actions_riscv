@@ -33,3 +33,27 @@ Runner was tested on:
 | MangoPi MQ-Pro | [Ubuntu 23.10](https://ubuntu.com/download/risc-v) | |
 | Sipeed Lichee RV Dock | [Ubuntu 23.10](https://ubuntu.com/download/risc-v) | |
 | Sipeed Lichee RV Dock | [20211230_LicheeRV_debian_d1_hdmi_8723ds.7z](./howto_setup_rvv.md) | Use [GCC version](https://github.com/dkurt/dotnet_riscv/releases) ot .NET because of `fence.tso` hardware bug  |
+
+## Runner at system startup
+
+1. Create a file `~/.config/systemd/user/actions.service` with content:
+
+  ```
+  [Unit]
+  Description=Start GitHub Runner
+
+  [Service]
+  Type=simple
+  ExecStart=/home/sipeed/actions/run.sh
+
+  [Install]
+  WantedBy=default.target
+  ```
+  where `/home/sipeed/actions` is a path to installed package.
+
+2. Run commands:
+
+  ```bash
+  systemctl daemon-reload --user
+  systemctl enable actions --user
+  ```
