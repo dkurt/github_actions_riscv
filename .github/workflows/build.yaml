@@ -10,7 +10,7 @@ jobs:
     - name: Clone repositories
       run: |
         rm -rf runner
-        git clone -b dkurt/riscv64_runner_2.312.0 https://github.com/dkurt/runner --depth 1
+        git clone -b dkurt/riscv64_runner_2.321.0 https://github.com/dkurt/runner --depth 1
 
     - name: Download .NET
       run: |
