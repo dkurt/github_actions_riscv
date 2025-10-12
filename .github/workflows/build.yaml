@@ -1,6 +1,12 @@
 name: Build RISC-V runner
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Runner tag'
+        required: true
+        type: string
 
 jobs:
   build:
@@ -10,7 +16,8 @@ jobs:
     - name: Clone repositories
       run: |
         rm -rf runner
-        git clone -b dkurt/riscv64_runner_2.321.0 https://github.com/dkurt/runner --depth 1
+        git clone -b ${{ inputs.version }} https://github.com/actions/runner --depth 1
+        git apply patches/runner.patch
 
     - name: Download .NET
       run: |
