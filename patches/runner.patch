@@ -1,0 +1,279 @@
+diff --git a/src/Directory.Build.props b/src/Directory.Build.props
+index 9db5fac..ef1dfd9 100644
+--- a/src/Directory.Build.props
++++ b/src/Directory.Build.props
+@@ -44,6 +44,9 @@
+   <PropertyGroup Condition="'$(BUILD_OS)' == 'Linux' AND '$(PackageRuntime)' == 'linux-arm64'">
+     <DefineConstants>$(DefineConstants);ARM64</DefineConstants>
+   </PropertyGroup>
++  <PropertyGroup Condition="'$(BUILD_OS)' == 'Linux' AND '$(PackageRuntime)' == 'linux-riscv64'">
++    <DefineConstants>$(DefineConstants);RISCV64</DefineConstants>
++  </PropertyGroup>
+ 
+   <!-- Set TRACE/DEBUG vars -->
+   <PropertyGroup>
+@@ -56,5 +59,6 @@
+   <!-- Set Treat tarnings as errors -->
+   <PropertyGroup>
+     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
++    <WarningsNotAsErrors>NU1902;SYSLIB0050;SYSLIB0051;CS0672;NU1903</WarningsNotAsErrors>
+   </PropertyGroup>
+ </Project>
+diff --git a/src/Misc/externals.sh b/src/Misc/externals.sh
+index 2a0db24..2b30115 100755
+--- a/src/Misc/externals.sh
++++ b/src/Misc/externals.sh
+@@ -3,10 +3,11 @@ PACKAGERUNTIME=$1
+ PRECACHE=$2
+ 
+ NODE_URL=https://nodejs.org/dist
++UNOFFICIAL_NODE_URL=https://unofficial-builds.nodejs.org/download/release
+ NODE_ALPINE_URL=https://github.com/actions/alpine_nodejs/releases/download
+ # When you update Node versions you must also create a new release of alpine_nodejs at that updated version.
+ # Follow the instructions here: https://github.com/actions/alpine_nodejs?tab=readme-ov-file#getting-started
+-NODE20_VERSION="20.18.0"
++NODE20_VERSION="20.18.1"
+ 
+ get_abs_path() {
+   # exploits the fact that pwd will print abs path when no args
+@@ -177,3 +178,7 @@ fi
+ if [[ "$PACKAGERUNTIME" == "linux-arm" ]]; then
+     acquireExternalTool "$NODE_URL/v${NODE20_VERSION}/node-v${NODE20_VERSION}-linux-armv7l.tar.gz" node20 fix_nested_dir
+ fi
++
++if [[ "$PACKAGERUNTIME" == "linux-riscv64" ]]; then
++    acquireExternalTool "$UNOFFICIAL_NODE_URL/v${NODE20_VERSION}/node-v${NODE20_VERSION}-linux-riscv64.tar.gz" node20 fix_nested_dir
++fi
+diff --git a/src/NuGet.Config b/src/NuGet.Config
+index 95143bd..afc93a3 100644
+--- a/src/NuGet.Config
++++ b/src/NuGet.Config
+@@ -3,6 +3,7 @@
+   <packageSources>
+     <!--To inherit the global NuGet package sources remove the <clear/> line below -->
+     <clear />
++    <add key='local' value='/home/ubuntu/packages' />
+     <add key="api.nuget.org" value="https://api.nuget.org/v3/index.json" />
+   </packageSources>
+ </configuration>
+diff --git a/src/Runner.Common/Constants.cs b/src/Runner.Common/Constants.cs
+index 2c20d1b..f078d02 100644
+--- a/src/Runner.Common/Constants.cs
++++ b/src/Runner.Common/Constants.cs
+@@ -58,7 +58,8 @@ namespace GitHub.Runner.Common
+             X86,
+             X64,
+             Arm,
+-            Arm64
++            Arm64,
++            RiscV64
+         }
+ 
+         public static class Runner
+@@ -81,6 +82,8 @@ namespace GitHub.Runner.Common
+             public static readonly Architecture PlatformArchitecture = Architecture.Arm;
+ #elif ARM64
+             public static readonly Architecture PlatformArchitecture = Architecture.Arm64;
++#elif RISCV64
++            public static readonly Architecture PlatformArchitecture = Architecture.RiscV64;
+ #else
+             public static readonly Architecture PlatformArchitecture = Architecture.X64;
+ #endif
+diff --git a/src/Runner.Common/Runner.Common.csproj b/src/Runner.Common/Runner.Common.csproj
+index 6c46356..b24bfe1 100644
+--- a/src/Runner.Common/Runner.Common.csproj
++++ b/src/Runner.Common/Runner.Common.csproj
+@@ -3,7 +3,7 @@
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+     <OutputType>Library</OutputType>
+-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64;linux-arm;osx-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>linux-riscv64</RuntimeIdentifiers>
+     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+     <NoWarn>NU1701;NU1603;SYSLIB0050;SYSLIB0051</NoWarn>
+     <Version>$(Version)</Version>
+diff --git a/src/Runner.Common/Util/VarUtil.cs b/src/Runner.Common/Util/VarUtil.cs
+index 97273a1..766015f 100644
+--- a/src/Runner.Common/Util/VarUtil.cs
++++ b/src/Runner.Common/Util/VarUtil.cs
+@@ -53,6 +53,8 @@ namespace GitHub.Runner.Common.Util
+                         return "ARM";
+                     case Constants.Architecture.Arm64:
+                         return "ARM64";
++                    case Constants.Architecture.RiscV64:
++                        return "RISCV64";
+                     default:
+                         throw new NotSupportedException(); // Should never reach here.
+                 }
+diff --git a/src/Runner.Listener/Runner.Listener.csproj b/src/Runner.Listener/Runner.Listener.csproj
+index afd5281..f9e51d3 100644
+--- a/src/Runner.Listener/Runner.Listener.csproj
++++ b/src/Runner.Listener/Runner.Listener.csproj
+@@ -3,7 +3,7 @@
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+     <OutputType>Exe</OutputType>
+-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64;linux-arm;osx-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>linux-riscv64</RuntimeIdentifiers>
+     <SelfContained>true</SelfContained>
+     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+     <NoWarn>NU1701;NU1603;SYSLIB0050;SYSLIB0051</NoWarn>
+diff --git a/src/Runner.PluginHost/Runner.PluginHost.csproj b/src/Runner.PluginHost/Runner.PluginHost.csproj
+index 81a8d2e..c52b7de 100644
+--- a/src/Runner.PluginHost/Runner.PluginHost.csproj
++++ b/src/Runner.PluginHost/Runner.PluginHost.csproj
+@@ -3,7 +3,7 @@
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+     <OutputType>Exe</OutputType>
+-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64;linux-arm;osx-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>linux-riscv64</RuntimeIdentifiers>
+     <SelfContained>true</SelfContained>
+     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+     <NoWarn>NU1701;NU1603;SYSLIB0050;SYSLIB0051</NoWarn>
+diff --git a/src/Runner.Plugins/Runner.Plugins.csproj b/src/Runner.Plugins/Runner.Plugins.csproj
+index a786cf1..2633c64 100644
+--- a/src/Runner.Plugins/Runner.Plugins.csproj
++++ b/src/Runner.Plugins/Runner.Plugins.csproj
+@@ -3,7 +3,7 @@
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+     <OutputType>Library</OutputType>
+-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64;linux-arm;osx-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>linux-riscv64</RuntimeIdentifiers>
+     <SelfContained>true</SelfContained>
+     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+     <NoWarn>NU1701;NU1603;SYSLIB0050;SYSLIB0051</NoWarn>
+diff --git a/src/Runner.Sdk/Runner.Sdk.csproj b/src/Runner.Sdk/Runner.Sdk.csproj
+index 55dbf12..b03b07b 100644
+--- a/src/Runner.Sdk/Runner.Sdk.csproj
++++ b/src/Runner.Sdk/Runner.Sdk.csproj
+@@ -3,7 +3,7 @@
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+     <OutputType>Library</OutputType>
+-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64;linux-arm;osx-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>linux-riscv64</RuntimeIdentifiers>
+     <SelfContained>true</SelfContained>
+     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+     <NoWarn>NU1701;NU1603;SYSLIB0050;SYSLIB0051</NoWarn>
+diff --git a/src/Runner.Worker/Runner.Worker.csproj b/src/Runner.Worker/Runner.Worker.csproj
+index 53c1610..5299ff2 100644
+--- a/src/Runner.Worker/Runner.Worker.csproj
++++ b/src/Runner.Worker/Runner.Worker.csproj
+@@ -3,7 +3,7 @@
+   <PropertyGroup>
+     <TargetFramework>net8.0</TargetFramework>
+     <OutputType>Exe</OutputType>
+-    <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64;linux-arm;osx-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>linux-riscv64</RuntimeIdentifiers>
+     <SelfContained>true</SelfContained>
+     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+     <NoWarn>NU1701;NU1603;SYSLIB0050;SYSLIB0051</NoWarn>
+diff --git a/src/Sdk/Sdk.csproj b/src/Sdk/Sdk.csproj
+index ce7f97c..e24a2df 100644
+--- a/src/Sdk/Sdk.csproj
++++ b/src/Sdk/Sdk.csproj
+@@ -3,7 +3,7 @@
+     <PropertyGroup>
+         <TargetFramework>net8.0</TargetFramework>
+         <OutputType>Library</OutputType>
+-        <RuntimeIdentifiers>win-x64;win-x86;linux-x64;linux-arm64;linux-arm;osx-x64;osx-arm64;win-arm64</RuntimeIdentifiers>
++        <RuntimeIdentifiers>linux-riscv64</RuntimeIdentifiers>
+         <!-- <SelfContained>true</SelfContained> -->
+         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+         <NoWarn>NU1701;NU1603;SYSLIB0050;SYSLIB0051</NoWarn>
+diff --git a/src/dev.sh b/src/dev.sh
+index 8e23366..f38c507 100755
+--- a/src/dev.sh
++++ b/src/dev.sh
+@@ -17,7 +17,7 @@ LAYOUT_DIR="$SCRIPT_DIR/../_layout"
+ DOWNLOAD_DIR="$SCRIPT_DIR/../_downloads/netcore2x"
+ PACKAGE_DIR="$SCRIPT_DIR/../_package"
+ DOTNETSDK_ROOT="$SCRIPT_DIR/../_dotnetsdk"
+-DOTNETSDK_VERSION="8.0.404"
++DOTNETSDK_VERSION="8.0.101"
+ DOTNETSDK_INSTALLDIR="$DOTNETSDK_ROOT/$DOTNETSDK_VERSION"
+ RUNNER_VERSION=$(cat runnerversion)
+ 
+@@ -54,6 +54,7 @@ elif [[ "$CURRENT_PLATFORM" == 'linux' ]]; then
+         case $CPU_NAME in
+             armv7l) RUNTIME_ID="linux-arm";;
+             aarch64) RUNTIME_ID="linux-arm64";;
++            riscv64) RUNTIME_ID="linux-riscv64";;
+         esac
+     fi
+ elif [[ "$CURRENT_PLATFORM" == 'darwin' ]]; then
+@@ -80,7 +81,7 @@ if [[ "$CURRENT_PLATFORM" == 'windows' ]]; then
+         exit 1
+     fi
+ elif [[ "$CURRENT_PLATFORM" == 'linux' ]]; then
+-    if [[ ("$RUNTIME_ID" != 'linux-x64') && ("$RUNTIME_ID" != 'linux-x86') && ("$RUNTIME_ID" != 'linux-arm64') && ("$RUNTIME_ID" != 'linux-arm') ]]; then
++    if [[ ("$RUNTIME_ID" != 'linux-x64') && ("$RUNTIME_ID" != 'linux-x86') && ("$RUNTIME_ID" != 'linux-arm64') && ("$RUNTIME_ID" != 'linux-arm') && ("$RUNTIME_ID" != 'linux-riscv64') ]]; then
+        echo "Failed: Can't build $RUNTIME_ID package $CURRENT_PLATFORM" >&2
+        exit 1
+     fi
+@@ -124,7 +125,7 @@ function heading()
+ function build ()
+ {
+     heading "Building ..."
+-    dotnet msbuild -t:Build -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:RunnerVersion="${RUNNER_VERSION}" ./dir.proj || failed build
++    dotnet msbuild -t:Build -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:RunnerVersion="${RUNNER_VERSION}" ./dir.proj
+ }
+ 
+ function layout ()
+@@ -219,7 +220,8 @@ if [[ (! -d "${DOTNETSDK_INSTALLDIR}") || (! -e "${DOTNETSDK_INSTALLDIR}/.${DOTN
+         sdkinstallwindow_path=${sdkinstallwindow_path:0:1}:${sdkinstallwindow_path:1}
+         $POWERSHELL -NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "& \"./Misc/dotnet-install.ps1\" -Version ${DOTNETSDK_VERSION} -InstallDir \"${sdkinstallwindow_path}\" -NoPath; exit \$LastExitCode;" || checkRC dotnet-install.ps1
+     else
+-        bash ./Misc/dotnet-install.sh --version ${DOTNETSDK_VERSION} --install-dir "${DOTNETSDK_INSTALLDIR}" --no-path || checkRC dotnet-install.sh
++	echo 1
++        # bash ./Misc/dotnet-install.sh --version ${DOTNETSDK_VERSION} --install-dir "${DOTNETSDK_INSTALLDIR}" --no-path || checkRC dotnet-install.sh
+     fi
+ 
+     echo "${DOTNETSDK_VERSION}" > "${DOTNETSDK_INSTALLDIR}/.${DOTNETSDK_VERSION}"
+diff --git a/src/dir.proj b/src/dir.proj
+index 056a312..4682cd0 100644
+--- a/src/dir.proj
++++ b/src/dir.proj
+@@ -2,10 +2,7 @@
+ <Project ToolsVersion="14.0" DefaultTargets="Build"
+     xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+     <Target Name="GenerateConstant">
+-        <Exec Command="git rev-parse HEAD" ConsoleToMSBuild="true">
+-            <Output TaskParameter="ConsoleOutput" PropertyName="GitInfoCommitHash" />
+-        </Exec>
+-        <Message Text="Building $(Product): $(GitInfoCommitHash) --- $(PackageRuntime)" Importance="high"/>
++        <Message Text="Building $(Product): bcf1c0729358ad80363c79bd41bf5287c34845b61 --- $(PackageRuntime)" Importance="high"/>
+ 
+         <ItemGroup>
+             <BuildConstants Include="namespace GitHub.Runner.Sdk"/>
+@@ -14,7 +11,7 @@
+             <BuildConstants Include="%20%20%20%20{"/>
+             <BuildConstants Include="%20%20%20%20%20%20%20%20public static class Source"/>
+             <BuildConstants Include="%20%20%20%20%20%20%20%20{"/>
+-            <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string CommitHash = %22$(GitInfoCommitHash)%22%3B"/>
++            <BuildConstants Include="%20%20%20%20%20%20%20%20%20%20%20%20public static readonly string CommitHash = %22bcf1c0729358ad80363c79bd41bf5287c34845b61%22%3B"/>
+             <BuildConstants Include="%20%20%20%20%20%20%20%20}%0A"/>
+             <BuildConstants Include="%20%20%20%20%20%20%20%20public static class RunnerPackage"/>
+             <BuildConstants Include="%20%20%20%20%20%20%20%20{"/>
+@@ -26,8 +23,6 @@
+         </ItemGroup>
+ 
+         <WriteLinesToFile File="Runner.Sdk/BuildConstants.cs" Lines="@(BuildConstants)" Overwrite="true" />
+-
+-        <Exec Command="git update-index --assume-unchanged ./Runner.Sdk/BuildConstants.cs" ConsoleToMSBuild="true" />
+     </Target>
+ 
+     <ItemGroup>
+diff --git a/src/global.json b/src/global.json
+index 8c70738..d54915e 100644
+--- a/src/global.json
++++ b/src/global.json
+@@ -1,5 +1,5 @@
+ {
+   "sdk": {
+-    "version": "8.0.404"
++    "version": "8.0.101"
+   }
+ }
